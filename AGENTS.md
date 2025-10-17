@@ -49,19 +49,23 @@ nix build
 
 ### 4. Commit Your Changes
 
-Create meaningful commit messages:
+Create meaningful commit messages following [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:
 
 ```bash
 # Stage your changes
 git add .
 
-# Commit with a descriptive message
-git commit -m "feat: Add your feature description
+# Commit with a descriptive message using Conventional Commits format
+git commit -m "feat: add your feature description
 
 - Detail important changes
 - Explain why the change was made
 - Reference any issues if applicable"
 ```
+
+Conventional Commits format: `<type>[optional scope]: <description>`
+- Use lowercase for the description
+- Types: feat, fix, docs, style, refactor, test, chore, ci
 
 ### 5. Push and Create Pull Request
 
@@ -124,11 +128,16 @@ Our CI pipeline automatically:
 
 4. **Document changes**: Update relevant documentation when adding features
 
-5. **Use semantic commits**: Follow conventional commit format
-   - `feat:` for features
+5. **Use Conventional Commits**: Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format
+   - `feat:` for features (new functionality)
    - `fix:` for bug fixes
-   - `docs:` for documentation
-   - `chore:` for maintenance
+   - `docs:` for documentation changes
+   - `style:` for formatting, missing semi-colons, etc.
+   - `refactor:` for code changes that neither fix bugs nor add features
+   - `test:` for adding or correcting tests
+   - `chore:` for maintenance tasks
+   - `ci:` for CI/CD changes
+   - Use lowercase for descriptions
 
 ## Common Commands Reference
 
