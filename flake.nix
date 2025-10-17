@@ -73,5 +73,48 @@
         devShells.default = pkgs.mkShell {
           buildInputs = [ javy ];
         };
+
+        checks = {
+          hello-world = pkgs.runCommand "javy-hello-world-test" {
+            buildInputs = [ javy pkgs.wasmtime ];
+          } ''
+            # Set HOME to a writable directory for wasmtime cache
+            export HOME=$TMPDIR
+
+            # Create a simple hello world JavaScript file
+            cat > hello.js << 'EOF'
+            console.log("Hello, World!");
+            EOF
+
+            # Compile the JavaScript to WebAssembly using Javy (using build command)
+            echo "Compiling hello.js to WebAssembly..."
+            javy build hello.js -o hello.wasm
+
+            # Check that the wasm file was created
+            if [ ! -f hello.wasm ]; then
+              echo "ERROR: hello.wasm was not created"
+              exit 1
+            fi
+
+            # Run the WebAssembly module with wasmtime and capture output
+            echo "Running hello.wasm with wasmtime..."
+            output=$(wasmtime run hello.wasm 2>&1)
+
+            # Check the output is correct
+            expected="Hello, World!"
+            if [ "$output" = "$expected" ]; then
+              echo "SUCCESS: Output matches expected: $output"
+            else
+              echo "ERROR: Output mismatch"
+              echo "Expected: $expected"
+              echo "Got: $output"
+              exit 1
+            fi
+
+            # Create a success marker for the derivation
+            touch $out
+            echo "Test passed successfully!" >> $out
+          '';
+        };
       });
 }
