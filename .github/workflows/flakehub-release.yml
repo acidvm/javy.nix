@@ -1,0 +1,52 @@
+name: FlakeHub Rolling Release
+
+on:
+  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      rolling_minor:
+        description: 'Minor version for rolling release (e.g., 1 for 0.1.x)'
+        required: false
+        type: string
+        default: '1'
+      visibility:
+        description: 'Visibility of the flake on FlakeHub'
+        required: false
+        type: choice
+        default: 'public'
+        options:
+          - public
+          - unlisted
+          - private
+
+jobs:
+  flakehub-publish:
+    runs-on: ubuntu-22.04
+    permissions:
+      # Required for FlakeHub authentication
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch all history for accurate version calculation
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Publish to FlakeHub
+        uses: DeterminateSystems/flakehub-push@main
+        with:
+          # Enable rolling releases
+          rolling: true
+
+          # Use the minor version from input (defaults to 1)
+          rolling-minor: ${{ inputs.rolling_minor }}
+
+          # Set visibility from input (defaults to public)
+          visibility: ${{ inputs.visibility }}
+
+          # Optional: Include output paths for better discoverability
+          include-output-paths: true
