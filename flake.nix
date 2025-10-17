@@ -22,6 +22,14 @@
               x86_64-linux = "sha256-NZijbnWU53P12Nh47NpFn70wtowB5aors9vV04/NErY=";
             };
           };
+          "7.0.0" = {
+            sha256 = {
+              arm-macos = "07l45qdvdpppl3y36214qhbrzh429zkb5la7xa5f6g4abxi35yi2";
+              x86_64-macos = "0dbyh04k7gi114lrbqyjj6fx0sbidw4l8innqn27jfd8aryn3vq7";
+              arm-linux = "1w12m5r8zr4xvg2g9nrgdgn85js5kinjp0m22cnxpw2mvxbz5rfx";
+              x86_64-linux = "0db1dirx90mvi50g1qf98jgmmchni1mlj11xs14p3ckcd8q3q5qw";
+            };
+          };
           "7.0.1" = {
             sha256 = {
               arm-macos = "17v9khbazzbxni3dv5rx94csg9pafb7ffcg0b49czj2l8yvn3368";
