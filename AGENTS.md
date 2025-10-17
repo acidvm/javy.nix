@@ -80,12 +80,7 @@ gh pr create --title "Your PR title" --body "## Why
 [Explain the motivation and problem being solved]
 
 ## What
-[High-level summary of the approach]
-
-## Testing
-- [ ] nix flake check passes
-- [ ] nix build succeeds
-- [ ] CI checks pass"
+[High-level summary of the approach]"
 ```
 
 **PR Description Guidelines:**
@@ -93,7 +88,7 @@ gh pr create --title "Your PR title" --body "## Why
 - Focus on WHY the change is needed (motivation, problem being solved)
 - Provide only high-level WHAT (approach), not detailed HOW
 - The code diff shows HOW - don't duplicate it in the description
-- Include testing checklist
+- Testing is automated - only add Testing section if adding new tests
 
 ## Branch Naming Conventions
 
