@@ -12,70 +12,78 @@
         pkgs = nixpkgs.legacyPackages.${system};
         lib = pkgs.lib;
 
-        # Fetch Javy binary from GitHub releases
-        javy = pkgs.stdenv.mkDerivation {
-          name = "javy";
-          version = "3.1.1";
+        # Version configurations
+        versions = {
+          "3.1.1" = {
+            sha256 = {
+              arm-macos = "sha256-XAS45+Av/EhTH0d1LSH2f/hRyXgb8jx2aCIyTWPSHPQ=";
+              x86_64-macos = "sha256-5TIlnxPrN7fPZECpP6Rf9SxJWvNKV8b8NXSc3EpUTzY=";
+              arm-linux = "sha256-XxkYdmDLV6T7KvZ1PZ6nWKZBCPLnj6qVZ7vKZJQqZg=";
+              x86_64-linux = "sha256-NZijbnWU53P12Nh47NpFn70wtowB5aors9vV04/NErY=";
+            };
+          };
+          "7.0.1" = {
+            sha256 = {
+              arm-macos = "17v9khbazzbxni3dv5rx94csg9pafb7ffcg0b49czj2l8yvn3368";
+              x86_64-macos = "0fmp4adfgvq9651838n9nsyr05a489pgv4hmg17ybrd786g64lwb";
+              arm-linux = "1qd0j2synjfc2wz5j9x296jxyignljfzkwhvwxy002lx5ippsl1m";
+              x86_64-linux = "17kv3y1m8hpmxfxc1kmy09rv9wiim37la980dvd0qf3pa0vw471n";
+            };
+          };
+        };
 
-          src = pkgs.fetchurl {
-            url = "https://github.com/bytecodealliance/javy/releases/download/v3.1.1/javy-${
+        # Function to create a Javy derivation for a specific version
+        mkJavy = version: versionInfo:
+          let
+            platformKey =
               if pkgs.stdenv.isDarwin && pkgs.stdenv.isAarch64 then "arm-macos"
               else if pkgs.stdenv.isDarwin then "x86_64-macos"
               else if pkgs.stdenv.isLinux && pkgs.stdenv.isAarch64 then "arm-linux"
-              else "x86_64-linux"
-            }-v3.1.1.gz";
-            sha256 = if pkgs.stdenv.isDarwin && pkgs.stdenv.isAarch64 then "sha256-XAS45+Av/EhTH0d1LSH2f/hRyXgb8jx2aCIyTWPSHPQ="
-              else if pkgs.stdenv.isDarwin then "sha256-5TIlnxPrN7fPZECpP6Rf9SxJWvNKV8b8NXSc3EpUTzY="
-              else if pkgs.stdenv.isLinux && pkgs.stdenv.isAarch64 then "sha256-XxkYdmDLV6T7KvZ1PZ6nWKZBCPLnj6qVZ7vKZJQqZg="
-              else "sha256-NZijbnWU53P12Nh47NpFn70wtowB5aors9vV04/NErY=";
+              else "x86_64-linux";
+          in
+          pkgs.stdenv.mkDerivation {
+            pname = "javy";
+            inherit version;
+
+            src = pkgs.fetchurl {
+              url = "https://github.com/bytecodealliance/javy/releases/download/v${version}/javy-${platformKey}-v${version}.gz";
+              sha256 = versionInfo.sha256.${platformKey};
+            };
+
+            nativeBuildInputs = [ pkgs.gzip ] ++ lib.optionals pkgs.stdenv.isLinux [
+              pkgs.autoPatchelfHook
+            ];
+
+            buildInputs = lib.optionals pkgs.stdenv.isLinux [
+              pkgs.stdenv.cc.cc.lib
+            ];
+
+            unpackPhase = ''
+              gunzip -c $src > javy
+            '';
+
+            installPhase = ''
+              mkdir -p $out/bin
+              cp javy $out/bin/javy
+              chmod +x $out/bin/javy
+            '';
+
+            meta = {
+              description = "JavaScript to WebAssembly toolchain (version ${version})";
+              homepage = "https://github.com/bytecodealliance/javy";
+              platforms = pkgs.lib.platforms.unix;
+            };
           };
 
-          nativeBuildInputs = [ pkgs.gzip ] ++ lib.optionals pkgs.stdenv.isLinux [
-            pkgs.autoPatchelfHook
-          ];
+        # Create derivations for all versions
+        javyVersions = lib.mapAttrs mkJavy versions;
 
-          buildInputs = lib.optionals pkgs.stdenv.isLinux [
-            pkgs.stdenv.cc.cc.lib
-          ];
+        # Default to the latest version
+        defaultJavy = javyVersions."7.0.1";
 
-          unpackPhase = ''
-            gunzip -c $src > javy
-          '';
-
-          installPhase = ''
-            mkdir -p $out/bin
-            cp javy $out/bin/javy
-            chmod +x $out/bin/javy
-          '';
-
-          meta = {
-            description = "JavaScript to WebAssembly toolchain";
-            homepage = "https://github.com/bytecodealliance/javy";
-            platforms = pkgs.lib.platforms.unix;
-          };
-        };
-      in
-      {
-        packages = {
-          default = javy;
-          javy = javy;
-        };
-
-        apps = {
-          default = flake-utils.lib.mkApp {
-            drv = javy;
-          };
-          javy = flake-utils.lib.mkApp {
-            drv = javy;
-          };
-        };
-
-        devShells.default = pkgs.mkShell {
-          buildInputs = [ javy ];
-        };
-
-        checks = {
-          hello-world = pkgs.runCommand "javy-hello-world-test" {
+        # Function to create a test for a specific Javy version
+        mkJavyTest = name: javy:
+          pkgs.runCommand "javy-${name}-hello-world-test" {
             buildInputs = [ javy pkgs.wasmtime ];
           } ''
             # Set HOME to a writable directory for wasmtime cache
@@ -86,9 +94,19 @@
             console.log("Hello, World!");
             EOF
 
-            # Compile the JavaScript to WebAssembly using Javy (using build command)
+            # Compile the JavaScript to WebAssembly using Javy
+            echo "Testing Javy ${name}..."
             echo "Compiling hello.js to WebAssembly..."
-            javy build hello.js -o hello.wasm
+
+            # Try build command first (v4+), fallback to compile for older versions
+            if javy build hello.js -o hello.wasm 2>/dev/null; then
+              echo "Used 'build' command"
+            elif javy compile hello.js -o hello.wasm 2>/dev/null; then
+              echo "Used 'compile' command"
+            else
+              echo "ERROR: Failed to compile with both 'build' and 'compile' commands"
+              exit 1
+            fi
 
             # Check that the wasm file was created
             if [ ! -f hello.wasm ]; then
@@ -113,8 +131,41 @@
 
             # Create a success marker for the derivation
             touch $out
-            echo "Test passed successfully!" >> $out
+            echo "Test passed successfully for Javy ${name}!" >> $out
           '';
+
+        # Create tests for all versions
+        javyTests = lib.mapAttrs mkJavyTest javyVersions;
+
+      in
+      {
+        packages = {
+          default = defaultJavy;
+          javy = defaultJavy;
+        } // lib.mapAttrs' (version: drv:
+          lib.nameValuePair "javy-${version}" drv
+        ) javyVersions;
+
+        apps = {
+          default = flake-utils.lib.mkApp {
+            drv = defaultJavy;
+          };
+          javy = flake-utils.lib.mkApp {
+            drv = defaultJavy;
+          };
+        } // lib.mapAttrs' (version: drv:
+          lib.nameValuePair "javy-${version}" (flake-utils.lib.mkApp {
+            drv = drv;
+          })
+        ) javyVersions;
+
+        devShells.default = pkgs.mkShell {
+          buildInputs = [ defaultJavy ];
+        };
+
+        checks = javyTests // {
+          # Keep the original test name for backward compatibility
+          hello-world = javyTests."7.0.1";
         };
       });
 }
