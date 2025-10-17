@@ -18,7 +18,7 @@
             sha256 = {
               arm-macos = "sha256-XAS45+Av/EhTH0d1LSH2f/hRyXgb8jx2aCIyTWPSHPQ=";
               x86_64-macos = "sha256-5TIlnxPrN7fPZECpP6Rf9SxJWvNKV8b8NXSc3EpUTzY=";
-              arm-linux = "sha256-XxkYdmDLV6T7KvZ1PZ6nWKZBCPLnj6qVZ7vKZJQqZg=";
+              arm-linux = "sha256-GdDiiXQ6Ol02ehiuUyTxZvZptxavcbhLWAIeUKxvhzI=";
               x86_64-linux = "sha256-NZijbnWU53P12Nh47NpFn70wtowB5aors9vV04/NErY=";
             };
           };
