@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feat/*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check:
+    name: Nix Flake Check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v14
+        with:
+          diagnostic-endpoint: ""
+
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+        with:
+          use-flakehub: true
+
+      - name: Run nix flake check
+        run: nix flake check
+
+      - name: Build default package
+        run: nix build
+
+      - name: Test Javy binary
+        run: |
+          # Test that the binary exists and is executable
+          test -x ./result/bin/javy
+
+          # Test that it can run and show version/help
+          ./result/bin/javy --version || ./result/bin/javy --help
