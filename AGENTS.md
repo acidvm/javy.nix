@@ -75,18 +75,25 @@ Push your branch and create a PR using GitHub CLI:
 # Push your branch to remote
 git push -u origin your-branch-name
 
-# Create pull request using gh
-gh pr create --title "Your PR title" --body "## Summary
-- What this PR does
-- Why it's needed
+# Create pull request using gh (keep it terse - focus on WHY not HOW)
+gh pr create --title "Your PR title" --body "## Why
+[Explain the motivation and problem being solved]
 
-## Changes
-- List specific changes
+## What
+[High-level summary of the approach]
 
 ## Testing
-- How to test these changes
-- What was tested"
+- [ ] nix flake check passes
+- [ ] nix build succeeds
+- [ ] CI checks pass"
 ```
+
+**PR Description Guidelines:**
+- Keep it terse - PR descriptions become part of commit history
+- Focus on WHY the change is needed (motivation, problem being solved)
+- Provide only high-level WHAT (approach), not detailed HOW
+- The code diff shows HOW - don't duplicate it in the description
+- Include testing checklist
 
 ## Branch Naming Conventions
 
